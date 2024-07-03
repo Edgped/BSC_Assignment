@@ -165,7 +165,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # <span class="accent">0.</span> Introduction
 
-This file corresponds to the assignment asked for the application to the "<span class="orange_accent">Computational Biology Group</span>" at <span class="orange_accent">Barcelona Supercomputing Center</span> (<b class="green_accent">BSC</b>).
+This file corresponds to the assignment asked for the application to the "<span class="orange_accent">Computational Biology Group</span>" at the <span class="orange_accent">Barcelona Supercomputing Center</span> (<b class="green_accent">BSC</b>).
 <br>
 <br>
 This assignment consist of the following tasks:
@@ -180,6 +180,10 @@ This assignment consist of the following tasks:
   4. Calculate a histogram of frustration per residue for all PDBs
   <br>
   5. Calculate the frequency of amino acids in all PDBs
+
+<br>
+
+<span class="orange_accent"><b>NOTE</b>: Absolute paths in this R  markdown may not work properly for others; adjust if necessary.</span>
 
 ## <span class="accent">0.1.</span> Libraries
 
@@ -277,7 +281,7 @@ To do so, I first executed in terminal the script [install_frustraR.sh](./instal
 
 Then, I created a conda environment with python 3.9, where I installed <span class="orange_accent">`modeller`</span> (<span class="green_accent">modeller_10.5-1_amd64.deb</span>) and set the following configuration for this R markdown:
 
-```{r}
+```{r, warning=FALSE}
 # --------------------------------------------------MODELLER CONFIGURATION (ENV)
 
 use_python("/home/user/miniconda3/envs/frustratometeR/bin/python3")
@@ -311,17 +315,19 @@ This allowed me to run the <span class="orange_accent">`frustratometeR`</span> c
 
 # <span class="accent">3.</span> Calculate single residue frustration for all PDBs
 
-To calculate the single residue frustrations for each PDB file (`r length(pdb_ids)`), first I created a <span class="green_accent">`RESULTS folder`</span> where the output files will be stored. 
+To calculate the single residue frustrations for each PDB file, first I created a <span class="green_accent">`RESULTS folder`</span> where the output files will be stored. 
 <br>
 Also, I checked which chains were of my interest for the analysis looking at the chains specified on the file [List_100_PDBs](./List_100_PDBs).
 
 ```{r}
 # ---------------------------------------------RESULTS FOLDER & CHAIN DEFINITION
 
-results_folder <- "/home/rstudio/myfiles/BSC_Assignment/RESULTS/"
+results_folder <- "/home/rstudio/myfiles/BSC_Assignment/BSC_Assignment/RESULTS/"
 if (!file.exists(results_folder)) {
   dir.create(results_folder, showWarnings = FALSE)
 }
+
+# NOTE: Adjust the absolute path if necessary.
 
 pdb_chain <- unique(pdb_list$Chain)
 
@@ -334,11 +340,13 @@ So, I set that value (<span class="orange_accent">`pdb_chain`</span>) as the des
 ```{r, message=FALSE}
 # --------------------------------------------------------CALCULATE FRUSTRATIONS
 
-dir_frustration(PdbsDir = "/home/rstudio/myfiles/BSC_Assignment/PDBs/",
+dir_frustration(PdbsDir = "/home/rstudio/myfiles/BSC_Assignment/BSC_Assignment/PDBs/",
                 OrderList = NULL,
                 Chain = pdb_chain,
                 Mode = "singleresidue",
                 ResultsDir = results_folder)
+
+# NOTE: Adjust the absolute path if necessary.
 
 ```
 
@@ -382,8 +390,8 @@ And then I generated the histogram itself.
 ```{r}    
 # ---------------------------------------------------FRUSTRATION INDEX HISTOGRAM
 
-ggplot(data, aes(x = FrstIndex)) +
-  geom_histogram(binwidth = 0.1, fill = my_green, alpha = 0.6, color = alpha("white", 0.5)) +
+ggplot(combined_data, aes(x = FrstIndex)) +
+  geom_histogram(binwidth = 0.2, fill = my_green, alpha = 0.6, color = alpha("white", 0.5)) +
   labs(title = "Histogram of Frustration Index for all PDB files",
        x = "Frustration Index",
        y = "Frequency") +
@@ -417,7 +425,7 @@ ggplot(frustration_summary, aes(x = AA, y = avg_frustration, fill = color)) +
 
 ```
 
-Finally, as requested by Gonzalo, I add here the code I previously used to generate a histogram for the frustration results of each one of the PDB files individually.
+Finally, as suggested by Gonzalo, I add here the code I previously used to generate a histogram for the frustration results of each one of the PDB files individually.
 <br>
 
 First, I created the <span class="green_accent">`PLOTS folder`</span> to store all `r num_files` plots.
@@ -425,7 +433,7 @@ First, I created the <span class="green_accent">`PLOTS folder`</span> to store a
 ```{r}    
 # ------------------------------------------------------------------PLOTS FOLDER
 
-plots_folder <- "/home/rstudio/myfiles/BSC_Assignment/PLOTS/"
+plots_folder <- "./PLOTS/"
 if (!file.exists(plots_folder)) {
   dir.create(plots_folder, showWarnings = FALSE)
 }
@@ -439,11 +447,13 @@ Then generated and stored each one of the `r num_files` individual frustration i
 
 for (pdb_id in pdb_ids) {
 
+  file_path <- file.path(results_folder, paste0(pdb_id, "_", pdb_chain, ".done/FrustrationData/", pdb_id, "_", pdb_chain, ".pdb_singleresidue"))
+  
   if (file.exists(file_path)) {
    
     individual_data <- read.table(file_path, header = TRUE, stringsAsFactors = FALSE)
     
-    p <- ggplot(individual_data, aes(x = FrstIndex)) +
+    individual_plot <- ggplot(individual_data, aes(x = FrstIndex)) +
       geom_histogram(binwidth = 0.1, fill = my_green, alpha = 0.6, color = alpha("white", 0.5)) +
       labs(title = paste("Histogram of Frustration Index for", pdb_id),
            x = "Frustration Index",
@@ -453,9 +463,9 @@ for (pdb_id in pdb_ids) {
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
     
-    output_file <- file.path(plots_folder, paste0(pdb_id, "_", pdb_chain, "_FrstIndex_Histogram.png"))
+    output_file <- file.path(plots_folder, paste0(pdb_id, "_", pdb_chain, "_FrstIndex_Histogram.jpg"))
     
-    ggsave(output_file, plot = p, width = 8, height = 6)
+    ggsave(output_file, plot = individual_plot, width = 8, height = 6)
     
   } else {
     message(paste("File not found:", file_path))
@@ -464,7 +474,7 @@ for (pdb_id in pdb_ids) {
 
 ```
 
-All individual frustration index histograms can be accessed on the <span class="green_accent">`PLOTS folder`</span>.
+All individual frustration index histograms can be accessed in the <span class="green_accent">`PLOTS folder`</span>.
 
 <br>
 
@@ -474,7 +484,7 @@ All individual frustration index histograms can be accessed on the <span class="
 
 To calculate the frequency of amino acids in all `r num_files` PDB files, I assumed that only the chains specified in the file [List_100_PDBs](./List_100_PDBs) were the ones of interest (Ignoring other possible chains being in some PDBs). 
 <br>
-Therefore, to save resources, instead of starting from scratch with a count of amino acids extracted from the PDB files (too much computationally demanding in terms of execution time), I decided to utilize the data resulting from the calculation of frustrations per single residue, which I already had combined.
+Therefore, to save resources, instead of starting from scratch with a count of amino acids extracted from the PDB files (which is too computationally demanding in terms of execution time), I decided to utilize the data resulting from the calculation of frustrations per single residue, which I already had combined.
 <br>
 
 Then plotted the histogram of amino acid frequencies.
