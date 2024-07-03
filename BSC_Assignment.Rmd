@@ -1,0 +1,503 @@
+---
+title: "BSC | Assignment"
+author: "Edgar Chacón (edgarpedro.chacon01@estudiant.upf.edu)"
+date: "Last update: `r format(Sys.time(), '%d %B, %Y')`"      
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_caption: true
+---
+
+<style>
+#TOC .list-group-item.active, .list-group-item.active:focus {
+    color: #ffffff !important;
+    background-color: #AABF55;
+    transition: background-color 0.5s;
+}
+#TOC .list-group-item.active:hover {
+    color: #ffffff !important;
+    background-color: #BF9055;
+}
+#TOC .list-group-item.active .accent {
+    color: inherit !important;
+}
+
+.title {
+  color: #AABF55 !important;
+}
+
+h1 {
+  color: #AABF55;
+  border-bottom: 1px solid #BF9055;
+}
+
+h2 {
+  color: #BF9055;
+}
+
+h3 {
+  color: #BF9055;
+}
+
+h4 {
+  color: #BF9055;
+}
+
+h4.date {
+  color: black;
+  font-weight: normal;
+}
+
+h5 {
+  color: black;
+}
+
+a {
+  color: #AABF55; 
+  transition: color 0.5s;  
+}
+
+a:hover {
+  color: #BF9055; 
+}
+
+a:visited {
+  color: #AABF55;
+}
+
+a:visited:hover {
+  color: #BF9055;
+}
+
+.orange_accent {
+  color: #BF9055; 
+}
+
+.green_accent {
+  color: #AABF55; 
+}
+
+.question {
+  color: black;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: bold;
+}
+
+pre {
+  background-color: #E9ECDD;
+  padding: 10px;
+}
+
+.caption-title {
+  color: #AABF55 !important;
+}
+
+.table_title {
+  color: #BF9055 !important;
+}
+
+.horizontal-scroll {
+  margin-right: 150px !important;
+  margin-left: 65px !important;
+  padding-top: 5px !important;
+}
+
+.table {
+  max-width: 630px !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+  margin-right: 0px !important;
+  margin-left: 0px !important;
+  border-top: 2px solid #ECE6DD !important;
+  border-bottom: 2px solid #ECE6DD !important;
+}
+
+caption {
+  padding-left: 5px !important;
+  padding-right: 0px !important;
+  border-left: 2px solid #ECE6DD !important;
+  margin-left: 0px !important;
+}
+
+.figure {
+  margin-right: 150px !important;
+  margin-left: 0px !important;
+}
+
+.img.widefigure{
+  padding-left: 5px !important;
+  padding-right: 155px !important;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+  margin-right: 150px !important;
+  margin-left: 0px !important;
+}
+
+img {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+  border: 2px solid #E9ECDD !important;
+  border-radius: 4px !important;
+  margin-right: 150px !important;
+  margin-left: 0px !important;
+}
+
+p.caption {
+  margin-left: 65px !important;
+  padding-left: 5px !important;
+  padding-right: 0px !important;
+  border-left: 2px solid #E9ECDD !important;
+}
+
+</style>
+
+```{r SETUP, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<br>
+
+# <span class="accent">0.</span> Introduction
+
+This file corresponds to the assignment asked for the application to the "<span class="orange_accent">Computational Biology Group</span>" at <span class="orange_accent">Barcelona Supercomputing Center</span> (<b class="green_accent">BSC</b>).
+<br>
+<br>
+This assignment consist of the following tasks:
+<br>
+
+  1. Download The PDB files
+  <br>
+  2. Install frustratometeR
+  <br>
+  3. Calculate single residue frustration for all PDBs
+  <br>
+  4. Calculate a histogram of frustration per residue for all PDBs
+  <br>
+  5. Calculate the frequency of amino acids in all PDBs
+
+## <span class="accent">0.1.</span> Libraries
+
+Libraries used in this R markdown.
+```{r LIBRARIES, message=FALSE, warning=FALSE}
+# ---------------------------------------------------------------------LIBRARIES
+
+invisible(lapply(c("usethis", "devtools", "reticulate", "ggplot2", "dplyr"), library, character.only = TRUE))
+
+devtools::install_github("proteinphysiologylab/frustratometeR")
+
+library(frustratometeR)
+```
+
+Modeller had to be installed previously.
+<br>
+Specific information about dependencies installed in order to run <span class="orange_accent">`frustratometeR`</span> are in the ["Install frustratometeR" section](#section2). 
+
+<!--
+The following code chunk is hidden because its lines are not that relevant
+to the final markdown. Their purpose is to set some colors that can be used for plots.
+
+
+## <span class="accent">0.2.</span> Colors
+
+Color variables used in this R markdown.
+--->
+
+```{r COLORS, include=FALSE}
+# ------------------------------------------------------------------------COLORS
+
+my_orange <- c("#BF9055")
+my_green <- c("#90A430")
+```
+
+<br>
+
+<a name="section1"></a>
+
+# <span class="accent">1.</span> Download The PDB files
+
+To download the corresponding PDB files associated with the PDB IDs listed in the file [List_100_PDBs](./List_100_PDBs), first I had to extract those IDs from the list.
+
+```{r, message=FALSE, results='hide'}
+# -------------------------------------------------------------PDB ID EXTRACTION
+
+pdb_list <- read.table("./List_100_PDBs", header = TRUE)
+pdb_ids <- pdb_list$PdbID
+pdb_ids
+
+```
+
+Then, generate the download URLs.
+
+```{r, message=FALSE, results='hide'}
+# --------------------------------------------------------GENERATE DOWNLOAD URLS
+
+base_url <- "https://files.rcsb.org/download/"
+download_urls <- paste0(base_url, pdb_ids, ".pdb")
+download_urls
+
+```
+
+And finally, use the <span class="orange_accent">`wget`</span> command-line utility to download all the listed PDB files (`r length(pdb_ids)`).
+
+```{r}
+# --------------------------------------------------------DOWNLOAD THE PDB FILES
+
+pdb_folder <- "./PDBs"
+if (!file.exists(pdb_folder)) {
+  dir.create(pdb_folder, showWarnings = FALSE)
+}
+
+for (pdb_id in pdb_ids) {
+  wget_command <- paste("wget", paste0("https://files.rcsb.org/download/", pdb_id, ".pdb"), 
+                        "-P", pdb_folder, "-nc --progress=bar:force:noscroll -q --show-progress")
+  system(wget_command)
+}
+
+num_files <- system(paste("find", pdb_folder, "-name '*.pdb' | wc -l"), intern = TRUE)
+cat(paste(num_files, "PDB files have been downloaded successfully.\n"))
+
+```
+
+<br>
+
+<a name="section2"></a>
+
+# <span class="accent">2.</span> Install frustratometeR
+
+To install <span class="orange_accent">`frustratometeR`</span>, first I had to install all the necessary dependencies (System, Python and R Package dependencies). 
+<br>
+To do so, I first executed in terminal the script [install_frustraR.sh](./install_frustraR.sh) obtained from the [GitHub page](https://github.com/proteinphysiologylab/frustratometeR.git) of the R packacge <span class="orange_accent">`frustratometeR`</span>.
+<br>
+
+Then, I created a conda environment with python 3.9, where I installed <span class="orange_accent">`modeller`</span> (<span class="green_accent">modeller_10.5-1_amd64.deb</span>) and set the following configuration for this R markdown:
+
+```{r}
+# --------------------------------------------------MODELLER CONFIGURATION (ENV)
+
+use_python("/home/user/miniconda3/envs/frustratometeR/bin/python3")
+
+use_condaenv(condaenv = "frustratometeR", conda = "/home/user/miniconda3/condabin/conda")
+
+Sys.setenv(RETICULATE_PYTHON = "/home/user/miniconda3/envs/frustratometeR/bin/python3")
+
+reticulate::py_config()
+
+```
+
+To check if <span class="orange_accent">`modeller`</span> actually works, I used the following python code:
+
+```{python}
+# ------------------------------------------CHECK MODELLER INSTALLATION {python}
+
+try:
+    from modeller import *
+    print("Modeller is installed and can be imported successfully.")
+except ImportError as e:
+    print("ImportError:", e)
+
+```
+
+This allowed me to run the <span class="orange_accent">`frustratometeR`</span> code on the next section ["Calculate single residue frustration for all PDBs"](#section3) and obtain the desired results.
+
+<br>
+
+<a name="section3"></a>
+
+# <span class="accent">3.</span> Calculate single residue frustration for all PDBs
+
+To calculate the single residue frustrations for each PDB file (`r length(pdb_ids)`), first I created a <span class="green_accent">`RESULTS folder`</span> where the output files will be stored. 
+<br>
+Also, I checked which chains were of my interest for the analysis looking at the chains specified on the file [List_100_PDBs](./List_100_PDBs).
+
+```{r}
+# ---------------------------------------------RESULTS FOLDER & CHAIN DEFINITION
+
+results_folder <- "/home/rstudio/myfiles/BSC_Assignment/RESULTS/"
+if (!file.exists(results_folder)) {
+  dir.create(results_folder, showWarnings = FALSE)
+}
+
+pdb_chain <- unique(pdb_list$Chain)
+
+```
+
+All chains of interest in the [PDB list](./List_100_PDBs) resulted in the same one: "`r pdb_chain`".
+<br>
+So, I set that value (<span class="orange_accent">`pdb_chain`</span>) as the desired chain on the following code that will calculate all single residue frustrations for all PDBs found in the <span class="green_accent">`PDBs folder`</span>.
+
+```{r, message=FALSE}
+# --------------------------------------------------------CALCULATE FRUSTRATIONS
+
+dir_frustration(PdbsDir = "/home/rstudio/myfiles/BSC_Assignment/PDBs/",
+                OrderList = NULL,
+                Chain = pdb_chain,
+                Mode = "singleresidue",
+                ResultsDir = results_folder)
+
+```
+
+All frustration values were successfully generated and stored on the <span class="green_accent">`RESULTS folder`</span>.
+
+<br>
+
+<a name="section4"></a>
+
+# <span class="accent">4.</span> Calculate a histogram of frustration per residue for all PDBs
+
+To generate a histogram showing frustration per residue for all PDBs, I had to take into account that because the analysis was derived from `r num_files` PDB files, I had to firstly combine the data. 
+<br>
+
+To do so, I loaded the data obtained when I calculated the frustration of all PDBs, and combined all the resulting data into a single data frame.
+
+```{r}
+# --------------------------------------------------------------FRUSTRATION DATA
+
+data_list <- list()
+
+for (pdb_id in pdb_ids) {
+  
+  file_path <- file.path(results_folder, paste0(pdb_id, "_", pdb_chain, ".done/FrustrationData/", pdb_id, "_", pdb_chain, ".pdb_singleresidue"))
+  
+  if (file.exists(file_path)) {
+    data <- read.table(file_path, header = TRUE, stringsAsFactors = FALSE)
+    
+    data_list[[length(data_list) + 1]] <- data
+  } else {
+    message(paste("File not found:", file_path))
+  }
+}
+
+combined_data <- bind_rows(data_list)
+
+```
+
+And then I generated the histogram itself.
+
+```{r}    
+# ---------------------------------------------------FRUSTRATION INDEX HISTOGRAM
+
+ggplot(data, aes(x = FrstIndex)) +
+  geom_histogram(binwidth = 0.1, fill = my_green, alpha = 0.6, color = alpha("white", 0.5)) +
+  labs(title = "Histogram of Frustration Index for all PDB files",
+       x = "Frustration Index",
+       y = "Frequency") +
+  scale_x_continuous(breaks = seq(floor(min(combined_data$FrstIndex)), ceiling(max(combined_data$FrstIndex)), by = 0.5)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+```
+
+Because I wasn't sure that the previous plot was the histogram that I had to do, I tried to generate another histogram showing the frustration per residue.
+<br>
+
+To do that, I had to aggregate the data calculating the mean frustration score for each residue. 
+
+
+```{r}
+# ---------------------------------------------FRUSTRATION PER RESIDUE HISTOGRAM
+
+frustration_summary <- combined_data %>%
+  group_by(AA) %>%
+  summarize(avg_frustration = mean(FrstIndex))
+
+frustration_summary$color <- ifelse(frustration_summary$avg_frustration >= 0, my_green, my_orange)
+
+ggplot(frustration_summary, aes(x = AA, y = avg_frustration, fill = color)) +
+  geom_bar(stat = "identity", alpha = 0.6) +
+  labs(x = "Residue", y = "Average Frustration Index", title = "Frustration per Residue Histogram for all PDB files") +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+```
+
+Finally, as requested by Gonzalo, I add here the code I previously used to generate a histogram for the frustration results of each one of the PDB files individually.
+<br>
+
+First, I created the <span class="green_accent">`PLOTS folder`</span> to store all `r num_files` plots.
+
+```{r}    
+# ------------------------------------------------------------------PLOTS FOLDER
+
+plots_folder <- "/home/rstudio/myfiles/BSC_Assignment/PLOTS/"
+if (!file.exists(plots_folder)) {
+  dir.create(plots_folder, showWarnings = FALSE)
+}
+
+```
+
+Then generated and stored each one of the `r num_files` individual frustration index histograms.
+
+```{r}    
+# ---------------------------------------INDIVIDUAL FRUSTRATION INDEX HISTOGRAMS
+
+for (pdb_id in pdb_ids) {
+
+  if (file.exists(file_path)) {
+   
+    individual_data <- read.table(file_path, header = TRUE, stringsAsFactors = FALSE)
+    
+    p <- ggplot(individual_data, aes(x = FrstIndex)) +
+      geom_histogram(binwidth = 0.1, fill = my_green, alpha = 0.6, color = alpha("white", 0.5)) +
+      labs(title = paste("Histogram of Frustration Index for", pdb_id),
+           x = "Frustration Index",
+           y = "Frequency") +
+      scale_x_continuous(breaks = seq(floor(min(combined_data$FrstIndex)), 
+                                      ceiling(max(combined_data$FrstIndex)), by = 0.5)) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    
+    output_file <- file.path(plots_folder, paste0(pdb_id, "_", pdb_chain, "_FrstIndex_Histogram.png"))
+    
+    ggsave(output_file, plot = p, width = 8, height = 6)
+    
+  } else {
+    message(paste("File not found:", file_path))
+  }
+}
+
+```
+
+All individual frustration index histograms can be accessed on the <span class="green_accent">`PLOTS folder`</span>.
+
+<br>
+
+<a name="section5"></a>
+
+# <span class="accent">5.</span> Calculate the frequency of amino acids in all PDBs
+
+To calculate the frequency of amino acids in all `r num_files` PDB files, I assumed that only the chains specified in the file [List_100_PDBs](./List_100_PDBs) were the ones of interest (Ignoring other possible chains being in some PDBs). 
+<br>
+Therefore, to save resources, instead of starting from scratch with a count of amino acids extracted from the PDB files (too much computationally demanding in terms of execution time), I decided to utilize the data resulting from the calculation of frustrations per single residue, which I already had combined.
+<br>
+
+Then plotted the histogram of amino acid frequencies.
+
+```{r}
+# ------------------------------------------------AMINO ACID FREQUENCY HISTOGRAM
+
+aa_counts <- combined_data %>%
+  count(AA) %>%
+  arrange(desc(n))
+
+ggplot(aa_counts, aes(x = AA, y = n)) +
+  geom_bar(stat = "identity", fill = my_green, alpha = 0.6) +
+  labs(x = "Amino Acid", y = "Frequency", title = "Frequency of Each Amino Acid in all PDB files") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+```
+
+<br>
+
+# Session info {.unnumbered}
+
+```{r, results='asis',  echo=FALSE, message=FALSE }
+sessionInfo()
+```
