@@ -387,7 +387,7 @@ combined_data <- bind_rows(data_list)
 
 And then I generated the histogram itself.
 
-```{r}    
+```{r FI_histogram, fig.cap="Histogram of Frustration Index for all PDB files. This plot shows the frequency of the Frustration Indexes found in all the PDBs from the list."}    
 # ---------------------------------------------------FRUSTRATION INDEX HISTOGRAM
 
 ggplot(combined_data, aes(x = FrstIndex)) +
@@ -401,13 +401,21 @@ ggplot(combined_data, aes(x = FrstIndex)) +
 
 ```
 
+<span class="orange_accent">
+<b>COMMENT</b>: The Figure above is that extended to the right (Frustration index values of ~ 8.0) because of a single PDB (2M5C), and that extended to the left (Frustration index values of ~ -4.5) mostly because of a pair of PDBs (2K1S & 6EMR). 
+<br>
+Only if the ["INDIVIDUAL FRUSTRATION INDEX HISTOGRAMS" chunk](#IndivFrstHist) has been executed, those individual Frustration Index histograms can be visualized here: [2M5C](./PLOTS/2M5C_A_FrstIndex_Histogram.jpg), [2K1S](./PLOTS/2K1S_A_FrstIndex_Histogram.jpg) & [6EMR](./PLOTS/6EMR_A_FrstIndex_Histogram.jpg).
+</span>
+
+<br>
+
 Because I wasn't sure that the previous plot was the histogram that I had to do, I tried to generate another histogram showing the frustration per residue.
 <br>
 
 To do that, I had to aggregate the data calculating the mean frustration score for each residue. 
 
 
-```{r}
+```{r AverageFI_perResidue_histogram, fig.cap="Frustration per residue histogram for all PDB files. This plot shows the Average Frustration Index for each of the 20 amino acids across all the PDBs from the list."}
 # ---------------------------------------------FRUSTRATION PER RESIDUE HISTOGRAM
 
 frustration_summary <- combined_data %>%
@@ -439,6 +447,8 @@ if (!file.exists(plots_folder)) {
 }
 
 ```
+
+<a name="IndivFrstHist"></a>
 
 Then generated and stored each one of the `r num_files` individual frustration index histograms.
 
@@ -489,7 +499,7 @@ Therefore, to save resources, instead of starting from scratch with a count of a
 
 Then plotted the histogram of amino acid frequencies.
 
-```{r}
+```{r AA_Freq, fig.cap="Frequency of each Amino Acid in all PDB files. This plot shows the frequency of the 20 amino acids across all the PDBs from the list."}
 # ------------------------------------------------AMINO ACID FREQUENCY HISTOGRAM
 
 aa_counts <- combined_data %>%
